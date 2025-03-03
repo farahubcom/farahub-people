@@ -1,0 +1,144 @@
+const mongoose = require("mongoose");
+const { Doc } = require("@farahub/framework/facades");
+
+const { ObjectId } = mongoose.Types;
+
+class CreateOrUpdatePersonValidator {
+
+    /**
+     * The validator rules
+     * 
+     * @returns {object}
+     */
+    rules() {
+        return {
+            id: {
+                in: ["body"],
+                optional: true,
+                isMongoId: {
+                    bail: true
+                },
+                custom: {
+                    options: (value, { req }) => {
+                        const Person = req.wsConnection.model('Person');
+                        return Doc.resolve(value, Person).then(person => {
+                            if (!person)
+                                return Promise.reject('شخص یافت نشد.');
+                            return Promise.resolve(true);
+                        })
+                    },
+                    bail: true
+                },
+                customSanitizer: {
+                    options: (value, { req }) => {
+                        return ObjectId(value);
+                    }
+                }
+            },
+            code: {
+                in: ["body"],
+                isInt: true,
+                toInt: true,
+                notEmpty: true,
+                errorMessage: "ورود کد اجباری می باشد.",
+                custom: {
+                    options: (value, { req }) => {
+
+                        if (req.body.id) return true;
+
+                        const Person = req.wsConnection.model('Person');
+
+                        return Person.findOne({ code: value }).then(person => {
+                            if (person) {
+                                return Promise.reject('کد قبلا ثبت شده است.');
+                            }
+                        });
+                    }
+                },
+            },
+            firstName: {
+                in: ["body"],
+                isString: true,
+                notEmpty: true,
+                errorMessage: "نام شخص اجباری است."
+            },
+            lastName: {
+                in: ["body"],
+                optional: true,
+                isString: true,
+            },
+            phone: {
+                in: ["body"],
+                isString: true,
+                optional: true,
+                matches: {
+                    options: /(09)[0-9]{9}/i,
+                    errorMessage: "فرمت شماره همراه اشتباه می باشد."
+                },
+            },
+            email: {
+                in: ["body"],
+                optional: true,
+                customSanitizer: {
+                    options: (value) => {
+                        if (!Boolean(value))
+                            return undefined;
+                        return value;
+                    }
+                },
+                isEmail: {
+                    errorMessage: "فرمت ایمیل اشتباه می باشد."
+                },
+            },
+            // 'address.province': {
+            //     in: ["body"],
+            //     optional: true,
+            //     isString: true
+            // },
+            // 'address.city': {
+            //     in: ["body"],
+            //     optional: true,
+            //     isString: true
+            // },
+            // 'address.area': {
+            //     in: ["body"],
+            //     optional: true,
+            //     isString: true
+            // },
+            // 'address.street': {
+            //     in: ["body"],
+            //     optional: true,
+            //     isString: true
+            // },
+            // 'address.address': {
+            //     in: ["body"],
+            //     optional: true,
+            //     isString: true
+            // },
+            // address: {
+            //     isObject: true,
+            //     optional: {
+            //         options: {
+            //             checkFalsy: true
+            //         }
+            //     },
+            //     customSanitizer: {
+            //         options: (value) => {
+
+            //             if (Object.values(value).every(val => !Boolean(val)))
+            //                 return "";
+
+            //             return value;
+            //         }
+            //     }
+            // },
+            // note: {
+            //     in: ["body"],
+            //     optional: true,
+            //     isString: true
+            // }
+        }
+    }
+}
+
+module.exports = CreateOrUpdatePersonValidator;
