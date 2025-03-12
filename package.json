@@ -1,6 +1,6 @@
 {
     "name": "@farahub/people",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "description": "People module for the Farahub framework",
     "repository": {
         "type": "git",
