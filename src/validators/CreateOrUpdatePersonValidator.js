@@ -71,10 +71,19 @@ class CreateOrUpdatePersonValidator {
                 in: ["body"],
                 isString: true,
                 optional: true,
-                matches: {
-                    options: /(09)[0-9]{9}/i,
-                    errorMessage: "فرمت شماره همراه اشتباه می باشد."
-                },
+                custom: {
+                    options: (value, { req }) => {
+                        // If the value is empty, it's valid (since it's optional)
+                        if (!value) {
+                            return true;
+                        }
+                        // If the value is not empty, check if it matches the regex
+                        if (!/(09)[0-9]{9}/i.test(value)) {
+                            throw new Error("فرمت شماره همراه اشتباه می باشد.");
+                        }
+                        return true;
+                    }
+                }
             },
             email: {
                 in: ["body"],
