@@ -4,6 +4,7 @@ const CreateOrUpdatePersonValidator = require('../validators/CreateOrUpdatePerso
 const PersonDetailsValidator = require('../validators/PersonDetailsValidator');
 const PersonDeleteValidator = require('../validators/PersonDeleteValidator');
 const flatten = require('lodash/flatten');
+const generateUsername = require("../utils/generate_username");
 
 
 class MainController extends Controller {
@@ -191,7 +192,12 @@ class MainController extends Controller {
 
                         let user = await User.findOne({ phone: data.phone });
                         if (!user) {
-                            user = await User.createNew(data, {
+                            const personName = person.fullName.trim();
+                            user = await User.createNew({
+                                ...data,
+                                name: personName,
+                                username: personName ? generateUsername(personName) : person.phone,
+                            }, {
                                 inject: Injection.register(this.app.module('Authentication'), 'main.createNew', { withRequest: false })
                             });
                         }
