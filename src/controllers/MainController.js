@@ -1,12 +1,9 @@
 const { Controller } = require("@farahub/framework/foundation");
 const { Doc, Num, Lang, Validator, Injection, Event, Auth, Workspace } = require("@farahub/framework/facades");
-const PersonListValidator = require('../validators/PersonListValidator');
 const CreateOrUpdatePersonValidator = require('../validators/CreateOrUpdatePersonValidator');
 const PersonDetailsValidator = require('../validators/PersonDetailsValidator');
 const PersonDeleteValidator = require('../validators/PersonDeleteValidator');
 const flatten = require('lodash/flatten');
-const PersonCreatedOrUpdated = require('../events/PersonCreatedOrUpdated');
-const PersonDeleted = require('../events/PersonDeleted');
 
 
 class MainController extends Controller {
@@ -73,7 +70,6 @@ class MainController extends Controller {
             Auth.authenticate('jwt', { session: false }),
             Workspace.resolve(this.app),
             Injection.register(this.module, 'main.list'),
-            Validator.validate(new PersonListValidator()),
             async (req, res, next) => {
                 try {
 
@@ -81,10 +77,14 @@ class MainController extends Controller {
 
                     const Person = connection.model('Person');
 
+                    const searchInjections = await req.inject('search', { user });
+
                     const args = req.query;
 
                     let search = {
-                        //
+                        ...(searchInjections && Object.assign({},
+                            ...searchInjections
+                        ))
                     }
 
                     if (args && args.query && args.query !== '') {
@@ -197,9 +197,6 @@ class MainController extends Controller {
                             });
                         }
 
-                        // person.user = user.id;
-                        // await person.save();
-
                         const hasMember = await req.workspace.hasMember(user);
                         if (!hasMember) {
                             await req.workspace.addMember(user);
@@ -209,17 +206,6 @@ class MainController extends Controller {
                     }
 
                     res.json({ ok: true, person });
-
-                    // dispatch event
-                    req.event(new PersonCreatedOrUpdated(person, req.wsConnection, req.user));
-
-                    // // notify users
-                    // const notifiables = await req.workspace.memberships({ user: { $ne: req.user.id } })
-                    //     .select('user')
-                    //     .populate('user');
-
-                    // // send notification
-                    // notifiables.map(m => req.notify(new PersonCreated(person)).to(m.user));
 
 
                     // inject post response hooks
