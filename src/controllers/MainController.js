@@ -73,7 +73,7 @@ class MainController extends Controller {
             async (req, res, next) => {
                 try {
 
-                    const { wsConnection: connection } = req;
+                    const { wsConnection: connection, user } = req;
 
                     const Person = connection.model('Person');
 
