@@ -185,15 +185,14 @@ class MainController extends Controller {
 
                     const person = await Person.createOrUpdate(data, data.id, { inject, connection });
 
-                    // create related user
-                    if (person.wasNew && data.phone) {
-
+                    // create related user and membership
+                    if (data.phone) {
                         const User = this.app.connection.model('User');
 
                         let user = await User.findOne({ phone: data.phone });
                         if (!user) {
                             user = await User.createNew(data, {
-                                inject: Injection.register(this.app.module('Authentication'), 'main.createNew', false)
+                                inject: Injection.register(this.app.module('Authentication'), 'main.createNew', { withRequest: false })
                             });
                         }
 
