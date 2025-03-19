@@ -35,7 +35,7 @@ class Person {
      * @param {Object} request request object
      * @returns modified product
      */
-    static async createOrUpdate(data, personId, { connection, inject }) {
+    static async createOrUpdate(data, personId, { req, connection, inject }) {
         try {
             const Person = this.model('Person');
 
@@ -82,13 +82,13 @@ class Person {
             });
 
             // inject pre save hooks
-            await inject('preSave', { data, connection, inject, person });
+            await inject('preSave', { req, data, connection, inject, person });
 
             // save the changed
             await person.save();
 
             // inject post save hooks
-            await inject('postSave', { data, connection, inject, person });
+            await inject('postSave', { req, data, connection, inject, person });
 
             // return modified person
             return person;

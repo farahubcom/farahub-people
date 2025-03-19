@@ -184,7 +184,7 @@ class MainController extends Controller {
 
                     const Person = connection.model('Person');
 
-                    const person = await Person.createOrUpdate(data, data.id, { inject, connection });
+                    const person = await Person.createOrUpdate(data, data.id, { req, inject, connection });
 
                     // create related user and membership
                     if (data.phone) {
