@@ -78,7 +78,7 @@ class MainController extends Controller {
 
                     const Person = connection.model('Person');
 
-                    const searchInjections = await req.inject('search', { user });
+                    const searchInjections = await req.inject('search', { user, req });
 
                     const args = req.query;
 
